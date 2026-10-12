@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#12364a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Stealgull" />
+    <meta name="description" content="Il gabbiano più ricercato della riviera. Ruba cibo, vola e scatena il caos!" />
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%icons/icon.svg" />
+    <link rel="apple-touch-icon" href="%BASE_URL%icons/apple-touch-icon.png" />
+    <title>STEALGULL — Furto con becco</title>
+  </head>
+  <body>
+    <div id="app">
+      <main class="stage" aria-label="Stealgull, arcade game">
+        <div id="game" aria-label="Area di gioco, tieni premuto per tuffarti e rilascia per volare"></div>
+        <div class="vignette"></div>
+        <div id="hud" class="hud hidden">
+          <div class="hud-row">
+            <div class="hud-stat"><span class="mini-label">PUNTI</span><b id="score">0</b></div>
+            <div class="hud-stat mid"><span class="mini-label">TEMPO</span><b id="timer">1:15</b></div>
+            <div class="hud-stat right"><span class="mini-label">VITE</span><b id="lives" aria-label="3 vite">♥ ♥ ♥</b></div>
+          </div>
+          <div class="hud-lower">
+            <div class="chaos-group">
+              <div class="chaos-caption"><span>🔥 CAOS</span><span id="chaosValue">0%</span></div>
+              <div class="chaos-track"><div id="chaosFill"></div></div>
+            </div>
+            <div id="combo" class="combo">COMBO ×1</div>
+          </div>
+        </div>
+        <div id="topControls" class="top-controls hidden">
+          <button id="muteBtn" class="round-btn" aria-label="Disattiva audio" title="Audio">♫</button>
+          <button id="pauseBtn" class="round-btn" aria-label="Pausa" title="Pausa">Ⅱ</button>
+        </div>
+        <div class="tip-banner hidden" id="tipBanner">TIENI PREMUTO ↓  ·  RILASCIA ↑</div>
+        <div id="toast" class="toast" role="status" aria-live="polite"></div>
+        <section id="startOverlay" class="overlay">
+          <div class="brand-art">
+            <img src="%BASE_URL%icons/icon.svg" alt="Mascotte gabbiano Stealgull" />
+          </div>
+          <p class="eyebrow">UN'ESTATE. ZERO REGOLE.</p>
+          <h1>STEAL<span>GULL</span></h1>
+          <p class="subtitle">IL GABBIANO PIÙ RICERCATO<br />DELLA RIVIERA</p>
+          <div class="howto">
+            <div><span>👆</span><p><b>Tieni premuto</b><small>Picchiata!</small></p></div>
+            <div><span>↔</span><p><b>Trascina</b><small>Punta il bottino</small></p></div>
+            <div><span>☝</span><p><b>Rilascia</b><small>Fuggi col cibo!</small></p></div>
+          </div>
+          <button id="playBtn" class="cta">SI VOLA! <span>➜</span></button>
+          <p class="highscore">🏆 RECORD <b id="bestStart">0</b></p>
+        </section>
+        <section id="pauseOverlay" class="overlay hidden">
+          <p class="eyebrow">UN ATTIMO DI TREGUA</p>
+          <h2>PAUSA</h2>
+          <p class="screen-desc">I turisti non scappano mica.</p>
+          <button id="resumeBtn" class="cta">RIPRENDI <span>➜</span></button>
+          <button id="quitBtn" class="secondary-btn">TORNA AL MENU</button>
+        </section>
+        <section id="overOverlay" class="overlay hidden">
+          <p class="eyebrow" id="overEyebrow">FINE DEL COLPO</p>
+          <h2 id="overTitle">BECCATO!</h2>
+          <div class="result">
+            <span>PUNTEGGIO</span><strong id="finalScore">0</strong>
+            <span>RECORD PERSONALE</span><b id="finalBest">0</b>
+          </div>
+          <p id="finalMessage" class="screen-desc">La prossima volta, più focaccia.</p>
+          <button id="restartBtn" class="cta">RIPROVA <span>➜</span></button>
+          <button id="menuBtn" class="secondary-btn">MENU PRINCIPALE</button>
+        </section>
+      </main>
+      <p class="desktop-note">STEALGULL • IL CRIMINE HA LE ALI</p>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
