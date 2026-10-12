@@ -1,4 +1,3 @@
-@import url('data:text/css,');
 :root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#fff7e7;background:#082a3a;font-synthesis:none;font-optical-sizing:auto}
 *{box-sizing:border-box}html,body{width:100%;min-height:100%;margin:0;overflow:hidden;overscroll-behavior:none}
 button{font:inherit;cursor:pointer;border:0;-webkit-tap-highlight-color:transparent}
