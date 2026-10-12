@@ -299,7 +299,6 @@ export class StealgullScene extends Phaser.Scene {
     const speed = 265 + this.chaos;
     const sprite = this.add.circle(startX, startY, 11, 0xf5aa55)
       .setStrokeStyle(3, 0x7a482c).setDepth(12);
-    this.add.circle(startX - 3, startY - 3, 3, 0xffe8af).setDepth(13);
     this.projectiles.push({ sprite, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, ttl: 4 });
     this.popNumber(startX, startY - 28, 'HEY!', 0xff7d5a);
     this.hooks.onSound('throw');
@@ -486,8 +485,10 @@ export class StealgullScene extends Phaser.Scene {
     const g = this.add.graphics().setDepth(1);
     g.lineStyle(4, 0x7b7960, .9).lineBetween(x, y - 72, x, y + 35);
     g.fillStyle(0x456b67, .2).fillEllipse(x, y + 36, 120, 23);
-    g.fillStyle(primary).fillSlice(x, y - 70, 69, Math.PI, Math.PI * 2, false);
-    g.fillStyle(secondary).fillSlice(x, y - 70, 31, Math.PI, Math.PI * 2, false);
+    g.fillStyle(primary);
+    g.beginPath(); g.arc(x, y - 70, 69, Math.PI, Math.PI * 2, false); g.closePath(); g.fillPath();
+    g.fillStyle(secondary);
+    g.beginPath(); g.arc(x, y - 70, 31, Math.PI, Math.PI * 2, false); g.closePath(); g.fillPath();
     g.lineStyle(3, 0x2b6471, .5).lineBetween(x - 65, y - 70, x + 65, y - 70);
   }
 
