@@ -1,0 +1,24 @@
+{
+  "name": "stealgull",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Stealgull — an original mobile-first arcade seagull game",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "icons": "node scripts/build-icons.mjs",
+    "build": "npm run icons && tsc --noEmit && vite build",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "sharp": "^0.34.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.0",
+    "vite-plugin-pwa": "^1.0.0"
+  },
+  "engines": { "node": ">=20" }
+}
