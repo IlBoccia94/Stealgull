@@ -57,3 +57,11 @@ La scena usa `public/art/beach-clean-v5.webp`, il fondale mediterraneo pulito sc
 * Ogni 1.000 punti raggiunti compare una vita bonus **al posto di un cibo**, prendibile in picchiata. Recupera un cuore fino al massimo di tre (se le vite sono piene, comunica il limite). Il prossimo premio arriva a 2.000, 3.000 e così via; eventuali soglie superate insieme non vanno perse.
 * Uno scudo compare a intervalli casuali, sostituendo temporaneamente un cibo. Resta sulla spiaggia 9 secondi, poi scompare se non raccolto. Quando raccolto, protegge il gabbiano per **6 secondi** contro proiettili e bagnino. Un anello azzurro e un contatore nell'HUD mostrano quando è attivo. Il timer è basato sul tempo di gioco e quindi si ferma in pausa.
 * Entrambi usano il movimento e la picchiata già esistenti: nessun comando aggiuntivo. Texture originali in `public/art/power-life.svg` e `public/art/power-shield.svg`.
+
+## Bombardamento dall'alto — v7
+- **Pulsante 💩** in basso a destra (oppure **P** su tastiera): lascia cadere un proiettile dalla posizione attuale del gabbiano, senza interrompere il volo; si può usarlo ogni **7 secondi**.
+- Caduta con gravità, così serve mirare in anticipo al bersaglio.
+- **Turista colpito:** **+50 punti**, aumento del caos e reazione comica. Anche questi punti contano per la vita bonus ogni 1.000 punti.
+- **Bagnino colpito:** viene **stordito per 3 secondi**, interrompe il movimento e non può causare danni da collisione per la durata dello stordimento.
+- **Colpo mancato:** effetto splat sulla sabbia. Effetti grafici creati proceduralmente in Phaser; feedback sonoro Web Audio senza asset esterni.
+- Cooldown, effetti e stordimento si fermano in pausa; tutti gli oggetti temporanei vengono ripuliti a nuova partita/game over.

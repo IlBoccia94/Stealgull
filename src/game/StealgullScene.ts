@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
 
-export type SoundEffect = 'grab' | 'combo' | 'hit' | 'throw' | 'finish';
+export type SoundEffect = 'grab' | 'combo' | 'hit' | 'throw' | 'finish' | 'poop' | 'splat';
 export type GameSnapshot = {
-  score: number; timeLeft: number; lives: number; chaos: number; multiplier: number; shieldTimeLeft: number;
+  score: number; timeLeft: number; lives: number; chaos: number; multiplier: number; shieldTimeLeft: number; poopCooldown: number;
 };
 export type EndResult = {
   score: number; reason: 'time' | 'caught'; newRecord: boolean;
@@ -18,6 +18,9 @@ type FoodKind = 'fries' | 'gelato' | 'focaccia' | 'pizza';
 type PickupKind = 'life' | 'shield';
 type CollectibleKind = FoodKind | PickupKind;
 const SHIELD_DURATION = 6;
+const POOP_COOLDOWN = 7;
+const LIFEGUARD_STUN_DURATION = 3;
+const POOP_GRAVITY = 1050;
 const MAX_LIVES = 3;
 type Food = {
   sprite: Phaser.GameObjects.Image;
@@ -32,6 +35,11 @@ type Projectile = {
   vx: number;
   vy: number;
   ttl: number;
+};
+type PoopShot = {
+  sprite: Phaser.GameObjects.Image;
+  vy: number;
+  vx: number;
 };
 const FOODS: { kind: FoodKind; points: number }[] = [
   { kind: 'fries', points: 25 },
@@ -59,6 +67,9 @@ export class StealgullScene extends Phaser.Scene {
   private touristReactions = new Map<Phaser.GameObjects.Image, { idle: string; angry: string }>();
   private foods: Food[] = [];
   private projectiles: Projectile[] = [];
+  private poopShots: PoopShot[] = [];
+  private poopCooldown = 0;
+  private lifeguardStunned = 0;
   private score = 0;
   private bestAtStart = 0;
   private lives = 3;
@@ -113,6 +124,7 @@ export class StealgullScene extends Phaser.Scene {
 
   create(): void {
     this.makeBeach();
+    this.makePoopTexture();
     this.makeTourists();
     this.shadow = this.add.ellipse(225, 677, 72, 15, 0x24453e, .2).setDepth(4);
     this.shieldAura = this.add.circle(225, FLIGHT_Y, 47, 0x70ebff, .13)
@@ -148,6 +160,18 @@ export class StealgullScene extends Phaser.Scene {
   isPlaying(): boolean { return this.state === 'playing'; }
   isPaused(): boolean { return this.state === 'paused'; }
 
+  // An independent action; the player can drop a bomb without changing flight controls.
+  dropPoop(): boolean {
+    if (this.state !== 'playing' || this.poopCooldown > 0 || !this.gull.active) return false;
+    this.poopCooldown = POOP_COOLDOWN;
+    const sprite = this.add.image(this.gull.x, Math.min(HEIGHT - 12, this.gull.y + 25), 'poop-bomb')
+      .setDepth(17).setScale(.9);
+    this.poopShots.push({ sprite, vx: 0, vy: 45 });
+    this.hooks.onSound('poop');
+    this.report();
+    return true;
+  }
+
   startRun(bestAtStart: number): void {
     if (!this.gull) return;
     this.runSerial += 1;
@@ -155,6 +179,10 @@ export class StealgullScene extends Phaser.Scene {
     this.foods = [];
     this.projectiles.forEach(item => item.sprite.destroy());
     this.projectiles = [];
+    this.clearPoopShots();
+    this.poopCooldown = 0;
+    this.lifeguardStunned = 0;
+    this.lifeguard.clearTint();
     this.score = 0;
     this.bestAtStart = bestAtStart;
     this.lives = MAX_LIVES;
@@ -207,6 +235,10 @@ export class StealgullScene extends Phaser.Scene {
     this.foods = [];
     this.projectiles.forEach(item => item.sprite.destroy());
     this.projectiles = [];
+    this.clearPoopShots();
+    this.poopCooldown = 0;
+    this.lifeguardStunned = 0;
+    this.lifeguard.clearTint();
     this.gull.setPosition(225, FLIGHT_Y).clearTint().setTexture('gull-fly').setScale(.86).setAlpha(1).setAngle(0);
   }
 
@@ -221,6 +253,8 @@ export class StealgullScene extends Phaser.Scene {
 
     this.elapsed += dt;
     this.timeLeft = Math.max(0, this.timeLeft - dt);
+    this.poopCooldown = Math.max(0, this.poopCooldown - dt);
+    this.lifeguardStunned = Math.max(0, this.lifeguardStunned - dt);
     this.uiClock += dt;
     this.comboWindow -= dt;
     this.invulnerable = Math.max(0, this.invulnerable - dt);
@@ -290,6 +324,7 @@ export class StealgullScene extends Phaser.Scene {
     }
     this.updateProjectiles(dt);
     this.updateLifeguard();
+    this.updatePoopShots(dt);
     this.throwClock -= dt;
     if (this.chaos > 10 && this.throwClock <= 0) {
       this.launchProjectile();
@@ -323,6 +358,11 @@ export class StealgullScene extends Phaser.Scene {
       this.score - points <= this.bestAtStart) this.hooks.onToast('NUOVO RECORD!');
     this.removeCollectible(food);
     this.scheduleReplacement();
+    this.queueLifeRewards();
+    this.report();
+  }
+
+  private queueLifeRewards(): void {
     while (this.score >= this.nextLifeThreshold) {
       this.pendingLifePickups++;
       this.nextLifeThreshold += 1000;
@@ -330,7 +370,6 @@ export class StealgullScene extends Phaser.Scene {
     if (this.pendingLifePickups > 0 && !this.foods.some(item => item.kind === 'life')) {
       if (this.replaceRandomFood('life')) this.hooks.onToast('❤️ VITA BONUS!');
     }
-    this.report();
   }
 
   private removeCollectible(item: Food): void {
@@ -442,7 +481,8 @@ export class StealgullScene extends Phaser.Scene {
   }
 
   private updateLifeguard(): void {
-    if (this.chaos < 46) {
+    if (this.chaos < 46 && this.lifeguardStunned <= 0) {
+      this.lifeguard.clearTint();
       this.lifeguard.setVisible(false);
       this.lifeguardWarning.setVisible(false);
       return;
@@ -452,6 +492,13 @@ export class StealgullScene extends Phaser.Scene {
       this.hooks.onToast('⚠ ARRIVA IL BAGNINO!');
     }
     this.lifeguard.setVisible(true);
+    if (this.lifeguardStunned > 0) {
+      this.lifeguard.setTexture('npc-guard-whistle').setTint(0x8ee9ed);
+      this.lifeguardWarning.setPosition(this.lifeguard.x, 493).setText('💫 STORDITO!').setVisible(true);
+      return;
+    }
+    this.lifeguard.clearTint();
+    this.lifeguardWarning.setText('⚠ BAGNINO!');
     this.lifeguard.x = 225 + Math.sin(this.elapsed * 1.34) * 169;
     this.lifeguard.y = 570 + Math.sin(this.elapsed * 2.2) * 4;
     this.lifeguard.setTexture(Math.cos(this.elapsed * 1.34) > 0 ? 'npc-guard-run-right' : 'npc-guard-run-left');
@@ -497,6 +544,7 @@ export class StealgullScene extends Phaser.Scene {
     this.carried.setVisible(false);
     this.shieldTimeLeft = 0;
     this.shieldAura.setVisible(false);
+    this.clearPoopShots();
     this.lifeguardWarning.setVisible(false);
     this.hooks.onSound('finish');
     this.hooks.onEnd({
@@ -513,7 +561,8 @@ export class StealgullScene extends Phaser.Scene {
       lives: this.lives,
       chaos: this.chaos,
       multiplier: this.multiplier(),
-      shieldTimeLeft: this.shieldTimeLeft
+      shieldTimeLeft: this.shieldTimeLeft,
+      poopCooldown: this.poopCooldown
     });
   }
 
@@ -582,6 +631,93 @@ export class StealgullScene extends Phaser.Scene {
     }
   }
 
+
+
+  private makePoopTexture(): void {
+    if (this.textures.exists('poop-bomb')) return;
+    const g = this.add.graphics();
+    // Original compact hand-drawn "poop bomb" with two highlights.
+    g.fillStyle(0x38231f).fillEllipse(18, 27, 30, 16);
+    g.fillStyle(0x75462b).fillEllipse(18, 24, 25, 15);
+    g.fillStyle(0x895233).fillEllipse(18, 17, 18, 15);
+    g.fillStyle(0x9e6340).fillEllipse(18, 11, 11, 11);
+    g.fillStyle(0xf7d9a0).fillEllipse(13, 12, 4, 3);
+    g.fillStyle(0xf7d9a0).fillEllipse(11, 23, 4, 3);
+    g.generateTexture('poop-bomb', 36, 36);
+    g.destroy();
+  }
+
+  private clearPoopShots(): void {
+    for (const shot of this.poopShots) shot.sprite.destroy();
+    this.poopShots.length = 0;
+  }
+
+  private updatePoopShots(dt: number): void {
+    for (let i = this.poopShots.length - 1; i >= 0; i -= 1) {
+      const shot = this.poopShots[i];
+      const beforeY = shot.sprite.y;
+      shot.vy += POOP_GRAVITY * dt;
+      shot.sprite.y += shot.vy * dt;
+      shot.sprite.x += shot.vx * dt;
+      shot.sprite.angle += dt * 140;
+
+      // Segment-crossing checks avoid missing a hit at high falling velocity.
+      if (this.lifeguard.visible && this.lifeguardStunned <= 0 &&
+          Math.abs(shot.sprite.x - this.lifeguard.x) < 32 &&
+          beforeY <= this.lifeguard.y - 27 &&
+          shot.sprite.y >= this.lifeguard.y - 27) {
+        this.lifeguardStunned = LIFEGUARD_STUN_DURATION;
+        this.lifeguard.setTexture('npc-guard-whistle').setTint(0x8ee9ed);
+        this.chaos = Math.min(100, this.chaos + 12);
+        this.hooks.onToast('💩 BAGNINO STORDITO!');
+        this.splat(shot.sprite.x, this.lifeguard.y - 26, true);
+        this.removePoopShot(i);
+        continue;
+      }
+
+      let hitTourist: Phaser.GameObjects.Image | null = null;
+      for (const tourist of this.tourists) {
+        const hitY = tourist.y - 53;
+        if (Math.abs(shot.sprite.x - tourist.x) < 29 &&
+            beforeY <= hitY && shot.sprite.y >= hitY) {
+          hitTourist = tourist;
+          break;
+        }
+      }
+      if (hitTourist) {
+        const person = hitTourist;
+        this.score += 50;
+        this.chaos = Math.min(100, this.chaos + 7);
+        this.popNumber(person.x, person.y - 103, '+50 💩', 0xffeb97);
+        this.angryTourist(person.x);
+        this.splat(shot.sprite.x, person.y - 53, true);
+        this.removePoopShot(i);
+        this.queueLifeRewards(); // Poop points also count toward 1,000-point life rewards.
+        this.report();
+        continue;
+      }
+
+      if (shot.sprite.y >= 712 || shot.sprite.x < -30 || shot.sprite.x > WIDTH + 30) {
+        this.splat(clamp(shot.sprite.x, 0, WIDTH), 712, false);
+        this.removePoopShot(i);
+      }
+    }
+  }
+
+  private removePoopShot(index: number): void {
+    this.poopShots[index].sprite.destroy();
+    this.poopShots.splice(index, 1);
+  }
+
+  private splat(x: number, y: number, onTarget: boolean): void {
+    this.hooks.onSound('splat');
+    this.crumbs(x, y, 0x905635, onTarget ? 12 : 7);
+    const mark = this.add.ellipse(x, y, onTarget ? 27 : 36, onTarget ? 12 : 9,
+      0x6f3d28, .82).setDepth(12);
+    this.tweens.add({ targets: mark, alpha: 0, scaleX: 1.5, duration: 1100,
+      onComplete: () => mark.destroy() });
+    if (!onTarget) this.popNumber(x, y - 22, 'PLOP!', 0xe2d39f);
+  }
 
   private makeBeach(): void {
     this.add.image(WIDTH / 2, HEIGHT / 2, 'bg-beach-v5').setDisplaySize(WIDTH, HEIGHT).setDepth(0);

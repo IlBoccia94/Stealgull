@@ -16,6 +16,8 @@ const controls = $('topControls');
 const tips = $('tipBanner');
 const toastNode = $('toast');
 const muteButton = $<HTMLButtonElement>('muteBtn');
+const poopControl = $('poopControl');
+const poopBtn = $<HTMLButtonElement>('poopBtn');
 
 function readStorage(key: string, fallback: string): string {
   try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; }
@@ -36,6 +38,7 @@ function setScreen(screen: 'start' | 'pause' | 'over' | 'none'): void {
   overScreen.classList.toggle('hidden', screen !== 'over');
   hud.classList.toggle('hidden', screen === 'start');
   controls.classList.toggle('hidden', screen === 'start');
+  poopControl.classList.toggle('hidden', screen !== 'none');
   tips.classList.add('hidden');
 }
 function toast(message: string): void {
@@ -80,6 +83,8 @@ function sound(effect: SoundEffect): void {
   if (effect === 'hit') { tone(280, 85, .34, now, .11, 'sawtooth'); }
   if (effect === 'throw') { tone(180, 350, .16, now, .018, 'triangle'); }
   if (effect === 'finish') { tone(380, 160, .3, now, .07, 'triangle'); }
+  if (effect === 'poop') { tone(520, 200, .21, now, .045, 'triangle'); }
+  if (effect === 'splat') { tone(165, 72, .16, now, .055, 'sine'); }
 }
 function vibrate(ms: number): void {
   if ('vibrate' in navigator) navigator.vibrate(ms);
@@ -102,6 +107,10 @@ const hooks = {
     $('combo').classList.toggle('combo-active', state.multiplier > 1);
     $('shieldStatus').classList.toggle('hidden', state.shieldTimeLeft <= 0);
     $('shieldSeconds').textContent = state.shieldTimeLeft.toFixed(1) + 's';
+    const reload = state.poopCooldown > 0;
+    poopBtn.disabled = reload;
+    poopBtn.setAttribute('aria-label', reload ? 'Cacca in ricarica' : 'Lascia cadere una cacca');
+    $('poopCooldown').textContent = reload ? Math.ceil(state.poopCooldown) + 's' : 'PRONTA';
   },
   onEnd: (result: EndResult) => {
     best = Math.max(best, result.score);
@@ -139,6 +148,19 @@ function play(): void {
   clearTimeout(tipsTimer);
   tipsTimer = window.setTimeout(() => tips.classList.add('hidden'), 5200);
 }
+poopBtn.addEventListener('pointerdown', (event) => event.stopPropagation());
+poopBtn.addEventListener('click', () => {
+  if (scene.dropPoop()) {
+    initAudio();
+    vibrate(20);
+  }
+});
+window.addEventListener('keydown', (event) => {
+  if (!event.repeat && event.code === 'KeyP' && scene.isPlaying()) {
+    event.preventDefault();
+    scene.dropPoop();
+  }
+});
 $('playBtn').addEventListener('click', play);
 $('restartBtn').addEventListener('click', play);
 $('pauseBtn').addEventListener('click', () => {
