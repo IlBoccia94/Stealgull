@@ -34,3 +34,6 @@ Il path base Vite è `/Stealgull/` e corrisponde al nome esatto del repository. 
 La nuova direzione artistica usa 13 asset SVG originali in `public/art/`: animazioni del gabbiano (volo, battito, picchiata, stordimento), alimenti, turisti, bagnino e fondale mediterraneo. Tutti vengono caricati dal motore Phaser e precacheati dalla PWA. L'HUD è stato rifinito in stile arcade/cartoon. Il gameplay e i salvataggi rimangono compatibili con la v1.
 
 **MVP / primo playtest**. Bilanciamento e grafica saranno rifiniti dopo i test su dispositivo reale.
+
+### M4.1 — Sprite illustrati autentici
+Quattro pose originali del gabbiano (volo, battito d'ali, picchiata, danno) sono ritagliate dal concept illustrato e integrate come texture WebP trasparenti in `public/art/gull-*-illustrated.webp`. Rispetto alla v2 il gabbiano è stato ridimensionato da circa 200 px a circa 110 px su canvas 450 px, lasciando invariati i controlli touch e la logica del gioco. Gli SVG precedenti rimangono come sorgenti di fallback estetico ma non sono caricati per il protagonista.

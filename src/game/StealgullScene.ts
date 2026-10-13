@@ -79,25 +79,28 @@ export class StealgullScene extends Phaser.Scene {
 
   preload(): void {
     const files = [
-      'gull-fly', 'gull-flap', 'gull-dive', 'gull-hit',
       'tourist-0', 'tourist-1', 'tourist-2', 'lifeguard',
       'food-fries', 'food-gelato', 'food-focaccia', 'food-pizza', 'bg-beach'
     ] as const;
     for (const file of files) {
       this.load.svg(file, import.meta.env.BASE_URL + 'art/' + file + '.svg');
     }
+    // The illustrated raster poses are extracted from the approved concept sheet.
+    for (const pose of ['fly', 'flap', 'dive', 'hit'] as const) {
+      this.load.image('gull-' + pose, import.meta.env.BASE_URL + 'art/gull-' + pose + '-illustrated.webp');
+    }
   }
 
   create(): void {
     this.makeBeach();
     this.makeTourists();
-    this.shadow = this.add.ellipse(225, 677, 95, 20, 0x24453e, .2).setDepth(4);
+    this.shadow = this.add.ellipse(225, 677, 72, 15, 0x24453e, .2).setDepth(4);
     this.lifeguard = this.add.image(225, 570, 'lifeguard').setScale(.7).setDepth(8).setVisible(false);
     this.lifeguardWarning = this.add.text(225, 501, '⚠ BAGNINO!', {
       fontFamily: 'system-ui, sans-serif', fontSize: '14px', color: '#ffffff',
       fontStyle: '900', backgroundColor: '#d94b40', padding: { x: 7, y: 5 }
     }).setOrigin(.5).setDepth(10).setVisible(false);
-    this.gull = this.add.image(225, FLIGHT_Y, 'gull-fly').setScale(.78).setDepth(15);
+    this.gull = this.add.image(225, FLIGHT_Y, 'gull-fly').setScale(.86).setDepth(15);
     this.carried = this.add.image(0, 0, 'food-fries').setScale(.42).setDepth(16).setVisible(false);
 
     this.input.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
@@ -151,7 +154,7 @@ export class StealgullScene extends Phaser.Scene {
     this.lifeguard.setVisible(false);
     this.lifeguardWarning.setVisible(false);
     this.gull.setPosition(225, FLIGHT_Y).setTexture('gull-fly').clearTint().setAlpha(1);
-    this.gull.setAngle(0).setScale(.78);
+    this.gull.setAngle(0).setScale(.86);
     this.state = 'playing';
     for (let i = 0; i < 4; i += 1) this.spawnFood();
     this.report();
@@ -173,7 +176,7 @@ export class StealgullScene extends Phaser.Scene {
     this.foods = [];
     this.projectiles.forEach(item => item.sprite.destroy());
     this.projectiles = [];
-    this.gull.setPosition(225, FLIGHT_Y).clearTint().setTexture('gull-fly').setAlpha(1).setAngle(0);
+    this.gull.setPosition(225, FLIGHT_Y).clearTint().setTexture('gull-fly').setScale(.86).setAlpha(1).setAngle(0);
   }
 
   update(_: number, deltaMs: number): void {
@@ -214,7 +217,7 @@ export class StealgullScene extends Phaser.Scene {
     const wingFrame = Math.floor(this.elapsed * 9) % 2 === 0 ? 'gull-fly' : 'gull-flap';
     this.gull.setTexture(this.invulnerable > 1.3 ? 'gull-hit' : this.hold ? 'gull-dive' : wingFrame);
     this.gull.setAngle(this.hold ? 14 : (this.gull.y > FLIGHT_Y + 10 ? -11 : -2));
-    this.gull.setScale(this.invulnerable > 0 ? .76 : .78);
+    this.gull.setScale(this.invulnerable > 0 ? .84 : .86);
     if (this.invulnerable > 0) {
       this.gull.setAlpha(Math.floor(this.elapsed * 15) % 2 === 0 ? .55 : 1);
     } else {
@@ -222,7 +225,7 @@ export class StealgullScene extends Phaser.Scene {
     }
     const shadowSize = 1.15 - (DIVE_LIMIT - this.gull.y) / 900;
     this.shadow.setPosition(this.gull.x, 677).setScale(Math.max(.55, shadowSize));
-    if (this.carried.visible) this.carried.setPosition(this.gull.x + 44, this.gull.y + 22);
+    if (this.carried.visible) this.carried.setPosition(this.gull.x + 29, this.gull.y + 19);
 
     for (const food of this.foods) {
       food.sprite.y = food.homeY + Math.sin(this.elapsed * 3 + food.seed) * 3;
@@ -253,7 +256,7 @@ export class StealgullScene extends Phaser.Scene {
     this.chaos = Math.min(100, this.chaos + 10 + multiplier * 1.6);
     this.carriedKind = food.kind;
     this.carried.setTexture('food-' + food.kind).setVisible(true);
-    this.carried.setPosition(this.gull.x + 43, this.gull.y + 16);
+    this.carried.setPosition(this.gull.x + 29, this.gull.y + 19);
     this.popNumber(food.sprite.x, food.sprite.y - 35, '+' + points, 0xffec9d);
     this.crumbs(food.sprite.x, food.sprite.y, 0xffe5a3, 9);
     this.angryTourist(food.sprite.x);
