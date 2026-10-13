@@ -100,6 +100,8 @@ const hooks = {
     $('combo').textContent = 'COMBO ×' + state.multiplier;
     $('combo').dataset.multiplier = String(state.multiplier);
     $('combo').classList.toggle('combo-active', state.multiplier > 1);
+    $('shieldStatus').classList.toggle('hidden', state.shieldTimeLeft <= 0);
+    $('shieldSeconds').textContent = state.shieldTimeLeft.toFixed(1) + 's';
   },
   onEnd: (result: EndResult) => {
     best = Math.max(best, result.score);

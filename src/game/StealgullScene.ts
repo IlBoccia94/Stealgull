@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 
 export type SoundEffect = 'grab' | 'combo' | 'hit' | 'throw' | 'finish';
 export type GameSnapshot = {
-  score: number; timeLeft: number; lives: number; chaos: number; multiplier: number;
+  score: number; timeLeft: number; lives: number; chaos: number; multiplier: number; shieldTimeLeft: number;
 };
 export type EndResult = {
   score: number; reason: 'time' | 'caught'; newRecord: boolean;
@@ -15,12 +15,17 @@ type Hooks = {
   onHit: () => void;
 };
 type FoodKind = 'fries' | 'gelato' | 'focaccia' | 'pizza';
+type PickupKind = 'life' | 'shield';
+type CollectibleKind = FoodKind | PickupKind;
+const SHIELD_DURATION = 6;
+const MAX_LIVES = 3;
 type Food = {
   sprite: Phaser.GameObjects.Image;
-  kind: FoodKind;
+  kind: CollectibleKind;
   score: number;
   seed: number;
   homeY: number;
+  expiresAt?: number;
 };
 type Projectile = {
   sprite: Phaser.GameObjects.Arc;
@@ -47,6 +52,7 @@ export class StealgullScene extends Phaser.Scene {
   private gull!: Phaser.GameObjects.Image;
   private carried!: Phaser.GameObjects.Image;
   private shadow!: Phaser.GameObjects.Ellipse;
+  private shieldAura!: Phaser.GameObjects.Arc;
   private lifeguard!: Phaser.GameObjects.Image;
   private lifeguardWarning!: Phaser.GameObjects.Text;
   private tourists: Phaser.GameObjects.Image[] = [];
@@ -71,6 +77,11 @@ export class StealgullScene extends Phaser.Scene {
   private runSerial = 0;
   private lifeguardAlertShown = false;
   private carriedKind: FoodKind | null = null;
+  private shieldTimeLeft = 0;
+  private nextLifeThreshold = 1000;
+  private pendingLifePickups = 0;
+  private shieldSpawnCountdown = 16;
+  private shieldInterceptionCooldown = 0;
 
   constructor(hooks: Hooks) {
     super({ key: 'StealgullScene' });
@@ -79,7 +90,7 @@ export class StealgullScene extends Phaser.Scene {
 
   preload(): void {
     const files = [
-      'food-fries', 'food-gelato', 'food-focaccia', 'food-pizza'
+      'food-fries', 'food-gelato', 'food-focaccia', 'food-pizza', 'power-life', 'power-shield'
     ] as const;
     for (const file of files) {
       this.load.svg(file, import.meta.env.BASE_URL + 'art/' + file + '.svg');
@@ -104,6 +115,8 @@ export class StealgullScene extends Phaser.Scene {
     this.makeBeach();
     this.makeTourists();
     this.shadow = this.add.ellipse(225, 677, 72, 15, 0x24453e, .2).setDepth(4);
+    this.shieldAura = this.add.circle(225, FLIGHT_Y, 47, 0x70ebff, .13)
+      .setStrokeStyle(4, 0xa1f9ff, .9).setDepth(14).setVisible(false);
     this.lifeguard = this.add.image(225, 570, 'npc-guard-idle').setScale(.80).setDepth(8).setVisible(false);
     this.lifeguardWarning = this.add.text(225, 501, '⚠ BAGNINO!', {
       fontFamily: 'system-ui, sans-serif', fontSize: '14px', color: '#ffffff',
@@ -144,7 +157,13 @@ export class StealgullScene extends Phaser.Scene {
     this.projectiles = [];
     this.score = 0;
     this.bestAtStart = bestAtStart;
-    this.lives = 3;
+    this.lives = MAX_LIVES;
+    this.shieldTimeLeft = 0;
+    this.nextLifeThreshold = 1000;
+    this.pendingLifePickups = 0;
+    this.shieldSpawnCountdown = between(12, 18);
+    this.shieldInterceptionCooldown = 0;
+    this.shieldAura.setVisible(false);
     this.timeLeft = 75;
     this.chaos = 0;
     this.chain = 0;
@@ -180,6 +199,8 @@ export class StealgullScene extends Phaser.Scene {
     this.state = 'home';
     this.hold = false;
     this.carried.setVisible(false);
+    this.shieldTimeLeft = 0;
+    this.shieldAura.setVisible(false);
     this.lifeguard.setVisible(false);
     this.lifeguardWarning.setVisible(false);
     this.foods.forEach(item => item.sprite.destroy());
@@ -203,7 +224,20 @@ export class StealgullScene extends Phaser.Scene {
     this.uiClock += dt;
     this.comboWindow -= dt;
     this.invulnerable = Math.max(0, this.invulnerable - dt);
+    this.shieldTimeLeft = Math.max(0, this.shieldTimeLeft - dt);
+    this.shieldInterceptionCooldown = Math.max(0, this.shieldInterceptionCooldown - dt);
+    this.shieldAura.setVisible(this.shieldTimeLeft > 0);
     this.chaos = Math.max(0, this.chaos - dt * 1.25);
+    this.shieldSpawnCountdown -= dt;
+    if (this.shieldSpawnCountdown <= 0) {
+      if (this.shieldTimeLeft <= 0 && !this.foods.some(item => item.kind === 'shield') &&
+          this.replaceRandomFood('shield')) {
+        this.shieldSpawnCountdown = between(17, 26);
+        this.hooks.onToast('🛡️ SCUDO IN SPIAGGIA!');
+      } else {
+        this.shieldSpawnCountdown = 3;
+      }
+    }
     if (this.comboWindow <= 0 && this.chain > 0) this.chain = 0;
     if (this.timeLeft <= 0) { this.finish('time'); return; }
 
@@ -229,16 +263,28 @@ export class StealgullScene extends Phaser.Scene {
     } else {
       this.gull.setAlpha(1).clearTint();
     }
+    this.shieldAura.setPosition(this.gull.x, this.gull.y);
+    this.shieldAura.setAlpha(this.shieldTimeLeft < 1.5 && Math.floor(this.elapsed * 8) % 2 === 0 ? .45 : 1);
+    this.shieldAura.setScale(1 + Math.sin(this.elapsed * 6) * .04);
     const shadowSize = 1.15 - (DIVE_LIMIT - this.gull.y) / 900;
     this.shadow.setPosition(this.gull.x, 677).setScale(Math.max(.55, shadowSize));
     if (this.carried.visible) this.carried.setPosition(this.gull.x + 29, this.gull.y + 19);
 
-    for (const food of this.foods) {
+    for (const food of [...this.foods]) {
+      if (food.expiresAt !== undefined && this.elapsed >= food.expiresAt) {
+        this.removeCollectible(food);
+        this.spawnFood();
+        continue;
+      }
       food.sprite.y = food.homeY + Math.sin(this.elapsed * 3 + food.seed) * 3;
+      if (food.kind === 'life' || food.kind === 'shield') {
+        food.sprite.setAngle(Math.sin(this.elapsed * 2.4 + food.seed) * 9);
+      }
       if (this.hold && !this.didGrab &&
         Math.abs(this.gull.x - food.sprite.x) < 39 &&
         Math.abs(this.gull.y - food.sprite.y) < 42) {
-        this.steal(food);
+        if (food.kind === 'life' || food.kind === 'shield') this.collectPowerup(food);
+        else this.steal(food);
         break;
       }
     }
@@ -272,14 +318,76 @@ export class StealgullScene extends Phaser.Scene {
     if (this.chain === 7) this.hooks.onToast('RE DELLA FOCACCIA!');
     if (this.score > this.bestAtStart && this.bestAtStart > 0 &&
       this.score - points <= this.bestAtStart) this.hooks.onToast('NUOVO RECORD!');
-    const index = this.foods.indexOf(food);
-    if (index >= 0) this.foods.splice(index, 1);
-    food.sprite.destroy();
+    this.removeCollectible(food);
+    this.scheduleReplacement();
+    while (this.score >= this.nextLifeThreshold) {
+      this.pendingLifePickups++;
+      this.nextLifeThreshold += 1000;
+    }
+    if (this.pendingLifePickups > 0 && !this.foods.some(item => item.kind === 'life')) {
+      if (this.replaceRandomFood('life')) this.hooks.onToast('❤️ VITA BONUS!');
+    }
+    this.report();
+  }
+
+  private removeCollectible(item: Food): void {
+    const i = this.foods.indexOf(item);
+    if (i !== -1) this.foods.splice(i, 1);
+    item.sprite.destroy();
+  }
+
+  private scheduleReplacement(): void {
     const serial = this.runSerial;
     this.time.delayedCall(650 + between(0, 520), () => {
       if (serial === this.runSerial && this.state === 'playing') this.spawnFood();
     });
+  }
+
+  private collectPowerup(item: Food): void {
+    this.didGrab = true;
+    this.removeCollectible(item);
+    if (item.kind === 'life') {
+      if (this.lives < MAX_LIVES) {
+        this.lives++;
+        this.hooks.onToast('❤️ +1 VITA!');
+        this.popNumber(this.gull.x, this.gull.y - 44, '+1 ♥', 0xff90ae);
+      } else {
+        this.hooks.onToast('❤️ VITE AL MASSIMO!');
+      }
+      this.hooks.onSound('combo');
+      this.crumbs(this.gull.x, this.gull.y, 0xff768e, 13);
+    } else {
+      this.shieldTimeLeft = SHIELD_DURATION;
+      this.shieldAura.setVisible(true).setPosition(this.gull.x, this.gull.y);
+      this.hooks.onToast('🛡️ SCUDO ATTIVO!');
+      this.hooks.onSound('combo');
+      this.crumbs(this.gull.x, this.gull.y, 0x70f1ff, 13);
+    }
+    this.scheduleReplacement();
     this.report();
+  }
+
+  private replaceRandomFood(kind: PickupKind): boolean {
+    if (kind === 'life' && this.pendingLifePickups <= 0) return false;
+    if (kind === 'life' && this.foods.some(item => item.kind === 'life')) return false;
+    const candidates = this.foods.filter(item => item.kind !== 'life' && item.kind !== 'shield');
+    if (!candidates.length) return false;
+    const target = candidates[between(0, candidates.length - 1)];
+    const x = target.sprite.x;
+    const y = target.homeY;
+    this.removeCollectible(target);
+    this.spawnPickup(kind, x, y);
+    return true;
+  }
+
+  private spawnPickup(kind: PickupKind, x: number, homeY: number): void {
+    const sprite = this.add.image(x, homeY, 'power-' + kind).setDepth(9).setScale(.85);
+    this.foods.push({
+      sprite, kind, score: 0, seed: Math.random() * 10, homeY,
+      expiresAt: kind === 'shield' ? this.elapsed + 9 : undefined
+    });
+    this.crumbs(x, homeY, kind === 'life' ? 0xff7b93 : 0x76ebff, 8);
+    if (kind === 'life') this.pendingLifePickups--;
   }
 
   private multiplier(): number {
@@ -292,12 +400,19 @@ export class StealgullScene extends Phaser.Scene {
       p.sprite.x += p.vx * dt;
       p.sprite.y += p.vy * dt;
       p.ttl -= dt;
-      if (this.invulnerable <= 0 &&
-        Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, this.gull.x, this.gull.y) < 32) {
-        p.sprite.destroy();
-        this.projectiles.splice(i, 1);
-        this.damage();
-        continue;
+      if (Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, this.gull.x, this.gull.y) < 37) {
+        if (this.shieldTimeLeft > 0) {
+          p.sprite.destroy();
+          this.projectiles.splice(i, 1);
+          this.crumbs(this.gull.x, this.gull.y, 0x7eeeff, 6);
+          continue;
+        }
+        if (this.invulnerable <= 0) {
+          p.sprite.destroy();
+          this.projectiles.splice(i, 1);
+          this.damage();
+          continue;
+        }
       }
       if (p.ttl <= 0 || p.sprite.y < -30 || p.sprite.y > HEIGHT + 25 ||
         p.sprite.x < -30 || p.sprite.x > WIDTH + 30) {
@@ -338,15 +453,21 @@ export class StealgullScene extends Phaser.Scene {
     this.lifeguard.y = 570 + Math.sin(this.elapsed * 2.2) * 4;
     this.lifeguard.setTexture(Math.cos(this.elapsed * 1.34) > 0 ? 'npc-guard-run-right' : 'npc-guard-run-left');
     this.lifeguardWarning.setPosition(this.lifeguard.x, 493).setVisible(true);
-    if (this.invulnerable <= 0 &&
-      Math.abs(this.gull.x - this.lifeguard.x) < 33 &&
-      Math.abs(this.gull.y - this.lifeguard.y) < 54) {
-      this.damage();
+    if (Math.abs(this.gull.x - this.lifeguard.x) < 33 &&
+        Math.abs(this.gull.y - this.lifeguard.y) < 54) {
+      if (this.shieldTimeLeft > 0) {
+        if (this.shieldInterceptionCooldown <= 0) {
+          this.crumbs(this.gull.x, this.gull.y, 0x7eeeff, 8);
+          this.shieldInterceptionCooldown = .8;
+        }
+      } else if (this.invulnerable <= 0) {
+        this.damage();
+      }
     }
   }
 
   private damage(): void {
-    if (this.invulnerable > 0 || this.state !== 'playing') return;
+    if (this.invulnerable > 0 || this.shieldTimeLeft > 0 || this.state !== 'playing') return;
     this.invulnerable = 1.9;
     this.lives -= 1;
     this.chain = 0;
@@ -371,6 +492,8 @@ export class StealgullScene extends Phaser.Scene {
     this.state = 'over';
     this.hold = false;
     this.carried.setVisible(false);
+    this.shieldTimeLeft = 0;
+    this.shieldAura.setVisible(false);
     this.lifeguardWarning.setVisible(false);
     this.hooks.onSound('finish');
     this.hooks.onEnd({
@@ -386,7 +509,8 @@ export class StealgullScene extends Phaser.Scene {
       timeLeft: this.timeLeft,
       lives: this.lives,
       chaos: this.chaos,
-      multiplier: this.multiplier()
+      multiplier: this.multiplier(),
+      shieldTimeLeft: this.shieldTimeLeft
     });
   }
 
@@ -398,6 +522,10 @@ export class StealgullScene extends Phaser.Scene {
     const x = slots.length ? slots[between(0, slots.length - 1)] : between(45, 405);
     const choice = FOODS[between(0, FOODS.length - 1)];
     const homeY = between(609, 647);
+    if (this.pendingLifePickups > 0 && !this.foods.some(item => item.kind === 'life')) {
+      this.spawnPickup('life', x, homeY);
+      return;
+    }
     const sprite = this.add.image(x, homeY, 'food-' + choice.kind).setDepth(7).setScale(.58);
     this.foods.push({ sprite, kind: choice.kind, score: choice.points, seed: Math.random() * 10, homeY });
     const halo = this.add.circle(x, homeY + 5, 21, 0xffffff, .1).setDepth(5);

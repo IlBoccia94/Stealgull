@@ -200,3 +200,9 @@ h1 span{color:#ffce69}h2{color:#ffe097}
  .round-btn{width:37px;height:39px;font-size:19px}
  .top-controls{right:9px;gap:5px;top:max(8px,env(safe-area-inset-top))}
 }
+
+/* Power-up status: dynamic countdown, not a baked image. */
+.shield-status{display:flex;align-items:center;justify-content:space-between;gap:9px;width:max-content;max-width:100%;
+ margin:7px 0 0;padding:6px 11px;border:1.5px solid #b0fbff;border-radius:11px;background:rgba(3,57,83,.92);
+ box-shadow:0 3px 9px rgba(3,21,38,.3);font-size:11px;font-weight:900;letter-spacing:.6px;color:#cbfaff;text-shadow:0 1px 3px #10415d}
+.shield-status b{font-size:12px;color:white;font-variant-numeric:tabular-nums}

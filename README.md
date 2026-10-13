@@ -52,3 +52,8 @@ Tutti gli elementi rimangono ospitati localmente dal sito, senza dipendenze runt
 
 ## M4 v5 — Sfondo pulito e HUD completamente dinamico
 La scena usa `public/art/beach-clean-v5.webp`, il fondale mediterraneo pulito scelto nel playtest, senza HUD, persone o gabbiani pre-renderizzati. Gli elementi dinamici dell'interfaccia (punteggio, timer, vite, caos, combo, pausa e volume) sono costruiti interamente con HTML/CSS e aggiornati dallo stato del gioco in `src/main.ts`: **non usano immagini**. Il contatore secondi è corretto sul confine dei minuti, le vite rimaste vengono rappresentate con cuori pieni/vuoti, il livello di caos e il moltiplicatore cambiano in tempo reale. La generazione durante la build esporta solo gli sprite dei PNG dei personaggi; il vecchio atlante HUD non è più necessario.
+
+## Power-up: vite e scudo (v6)
+* Ogni 1.000 punti raggiunti compare una vita bonus **al posto di un cibo**, prendibile in picchiata. Recupera un cuore fino al massimo di tre (se le vite sono piene, comunica il limite). Il prossimo premio arriva a 2.000, 3.000 e così via; eventuali soglie superate insieme non vanno perse.
+* Uno scudo compare a intervalli casuali, sostituendo temporaneamente un cibo. Resta sulla spiaggia 9 secondi, poi scompare se non raccolto. Quando raccolto, protegge il gabbiano per **6 secondi** contro proiettili e bagnino. Un anello azzurro e un contatore nell'HUD mostrano quando è attivo. Il timer è basato sul tempo di gioco e quindi si ferma in pausa.
+* Entrambi usano il movimento e la picchiata già esistenti: nessun comando aggiuntivo. Texture originali in `public/art/power-life.svg` e `public/art/power-shield.svg`.
