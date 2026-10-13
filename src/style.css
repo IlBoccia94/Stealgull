@@ -79,3 +79,36 @@ h1 span{color:#ffce69}h2{color:#ffe097}
 .intro-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.53;filter:brightness(.52) saturate(1.25) blur(.5px);pointer-events:none}
 #startOverlay > :not(.intro-poster){position:relative;z-index:1}
 #startOverlay::before{z-index:2}
+
+/* M4 v4 illustrated HUD — exported from the approved concept sheets. */
+.hud{left:9px;right:96px;top:max(9px,env(safe-area-inset-top))}
+.hud-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.hud-stat{position:relative;height:56px;padding:0;background:transparent center/100% 100% no-repeat!important;border:0;border-radius:0;box-shadow:none;text-shadow:0 1px 3px #160b08c0;align-items:stretch!important}
+.hud-stat:first-child{background-image:url('/Stealgull/art/v4/hud-score.webp')!important}
+.hud-stat.mid{background-image:url('/Stealgull/art/v4/hud-timer.webp')!important}
+.hud-stat.right{background-image:url('/Stealgull/art/v4/hud-lives.webp')!important}
+.hud-stat .mini-label{position:absolute;top:10px;left:38%;width:55%;text-align:center;color:#ffdf96;font-size:8px;letter-spacing:.5px;line-height:1}
+.hud-stat b{position:absolute;left:36%;top:26px;width:60%;font-size:clamp(14px,4.4vw,21px);line-height:1;color:#fff6e0;text-align:center;letter-spacing:-.6px;text-shadow:0 2px 1px #160b08}
+.hud-stat.right .mini-label{display:none}
+#lives{position:absolute;opacity:0;pointer-events:none}
+.hud-stat.right::after{content:"";position:absolute;left:22%;top:28%;width:71%;height:52%;pointer-events:none;
+ background:linear-gradient(to left,rgba(22,20,23,.77) 0%,rgba(22,20,23,.77) var(--lost,0%),transparent var(--lost,0%));
+ border-radius:14px;mix-blend-mode:multiply}
+.hud-stat.right[data-lives="3"]{--lost:0%}
+.hud-stat.right[data-lives="2"]{--lost:33.4%}
+.hud-stat.right[data-lives="1"]{--lost:66.7%}
+.hud-stat.right[data-lives="0"]{--lost:100%}
+.hud-lower{margin-top:6px;gap:7px}
+.chaos-group{position:relative;background:url('/Stealgull/art/v4/hud-chaos.webp') center/100% 100% no-repeat;
+ height:47px;border:0;padding:9px 12px 6px 26%;border-radius:0;box-shadow:none}
+.chaos-caption{margin:0 0 4px;font-size:8px;line-height:1;color:#fff0b3;text-shadow:0 2px 2px #191311}
+.chaos-track{height:10px;border:1px solid #ffd581;border-radius:7px;background:#1b1926;overflow:hidden}
+#chaosFill{background:linear-gradient(90deg,#ffd85d,#ff9d38,#e84440)}
+.combo[data-multiplier="3"]{background:url('/Stealgull/art/v4/hud-combo.webp') center/contain no-repeat;color:transparent;
+ font-size:0;border:0;box-shadow:none;min-width:74px;height:58px;padding:0}
+.round-btn#pauseBtn{background:url('/Stealgull/art/v4/hud-pause.webp') center/cover no-repeat!important;
+ border:0!important;box-shadow:none!important;font-size:0}
+.round-btn#muteBtn[data-muted="true"]{background:url('/Stealgull/art/v4/hud-mute.webp') center/cover no-repeat!important;
+ border:0!important;box-shadow:none!important;font-size:0}
+.highscore{background:url('/Stealgull/art/v4/hud-trophy.webp') center/100% 100% no-repeat;min-width:195px;
+ min-height:90px;padding:42px 17px 12px;color:#fff6db;text-shadow:0 1px 2px #30241a}

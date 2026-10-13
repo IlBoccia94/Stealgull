@@ -51,6 +51,7 @@ export class StealgullScene extends Phaser.Scene {
   private lifeguardWarning!: Phaser.GameObjects.Text;
   private foamLines: Phaser.GameObjects.Rectangle[] = [];
   private tourists: Phaser.GameObjects.Image[] = [];
+  private touristReactions = new Map<Phaser.GameObjects.Image, { idle: string; angry: string }>();
   private foods: Food[] = [];
   private projectiles: Projectile[] = [];
   private score = 0;
@@ -79,11 +80,20 @@ export class StealgullScene extends Phaser.Scene {
 
   preload(): void {
     const files = [
-      'tourist-0', 'tourist-1', 'tourist-2', 'lifeguard',
-      'food-fries', 'food-gelato', 'food-focaccia', 'food-pizza', 'bg-beach'
+      'food-fries', 'food-gelato', 'food-focaccia', 'food-pizza'
     ] as const;
     for (const file of files) {
       this.load.svg(file, import.meta.env.BASE_URL + 'art/' + file + '.svg');
+    }
+    this.load.image('bg-beach-v4', import.meta.env.BASE_URL + 'art/beach-illustrated.webp');
+    for (const name of [
+      'guard-idle', 'guard-whistle', 'guard-run-right', 'guard-run-left',
+      'guard-point', 'guard-grab',
+      'woman-idle', 'woman-shout', 'woman-attack',
+      'man-idle', 'man-shout', 'man-attack',
+      'elder-idle', 'elder-shout', 'elder-attack'
+    ]) {
+      this.load.image('npc-' + name, import.meta.env.BASE_URL + 'art/v4/' + name + '.webp');
     }
     // The illustrated raster poses are extracted from the approved concept sheet.
     for (const pose of ['fly', 'flap', 'dive', 'hit'] as const) {
@@ -95,7 +105,7 @@ export class StealgullScene extends Phaser.Scene {
     this.makeBeach();
     this.makeTourists();
     this.shadow = this.add.ellipse(225, 677, 72, 15, 0x24453e, .2).setDepth(4);
-    this.lifeguard = this.add.image(225, 570, 'lifeguard').setScale(.7).setDepth(8).setVisible(false);
+    this.lifeguard = this.add.image(225, 570, 'npc-guard-idle').setScale(.80).setDepth(8).setVisible(false);
     this.lifeguardWarning = this.add.text(225, 501, '⚠ BAGNINO!', {
       fontFamily: 'system-ui, sans-serif', fontSize: '14px', color: '#ffffff',
       fontStyle: '900', backgroundColor: '#d94b40', padding: { x: 7, y: 5 }
@@ -151,8 +161,9 @@ export class StealgullScene extends Phaser.Scene {
     this.elapsed = 0;
     this.uiClock = 0;
     this.lifeguardAlertShown = false;
-    this.lifeguard.setVisible(false);
+    this.lifeguard.setVisible(false).setTexture('npc-guard-idle');
     this.lifeguardWarning.setVisible(false);
+    this.touristReactions.forEach((poses, tourist) => tourist.setTexture(poses.idle));
     this.gull.setPosition(225, FLIGHT_Y).setTexture('gull-fly').clearTint().setAlpha(1);
     this.gull.setAngle(0).setScale(.86);
     this.state = 'playing';
@@ -330,6 +341,7 @@ export class StealgullScene extends Phaser.Scene {
     this.lifeguard.setVisible(true);
     this.lifeguard.x = 225 + Math.sin(this.elapsed * 1.34) * 169;
     this.lifeguard.y = 570 + Math.sin(this.elapsed * 2.2) * 4;
+    this.lifeguard.setTexture(Math.cos(this.elapsed * 1.34) > 0 ? 'npc-guard-run-right' : 'npc-guard-run-left');
     this.lifeguardWarning.setPosition(this.lifeguard.x, 493).setVisible(true);
     if (this.invulnerable <= 0 &&
       Math.abs(this.gull.x - this.lifeguard.x) < 33 &&
@@ -404,6 +416,14 @@ export class StealgullScene extends Phaser.Scene {
     if (!this.tourists.length) return;
     const nearest = this.tourists.reduce((a, b) =>
       Math.abs(a.x - x) < Math.abs(b.x - x) ? a : b);
+    const frames = this.touristReactions.get(nearest);
+    if (frames) {
+      nearest.setTexture(frames.angry);
+      const run = this.runSerial;
+      this.time.delayedCall(650, () => {
+        if (run === this.runSerial && nearest.active) nearest.setTexture(frames.idle);
+      });
+    }
     this.popNumber(nearest.x, nearest.y - 95, ['?!', 'EHI!', 'LADRO!'][between(0, 2)], 0xff6d5b);
     this.tweens.add({
       targets: nearest, angle: -7, yoyo: true, repeat: 3, duration: 80,
@@ -436,26 +456,28 @@ export class StealgullScene extends Phaser.Scene {
     }
   }
 
+
   private makeBeach(): void {
-    this.add.image(WIDTH / 2, HEIGHT / 2, 'bg-beach').setDisplaySize(WIDTH, HEIGHT).setDepth(0);
-    // Subtle breathing sea foam complements the static hand-drawn scenery.
+    this.add.image(WIDTH / 2, HEIGHT / 2, 'bg-beach-v4').setDisplaySize(WIDTH, HEIGHT).setDepth(0);
+    // A subtle animated foam shimmer stays behind all interactive sprites.
     for (let i = 0; i < 5; i += 1) {
       this.foamLines.push(
-        this.add.rectangle(WIDTH / 2, 343 + i * 28, WIDTH - 28, 2, 0xffffff, .13).setDepth(1)
+        this.add.rectangle(WIDTH / 2, 342 + i * 28, WIDTH - 32, 2, 0xffffff, .11).setDepth(1)
       );
     }
   }
 
   private makeTourists(): void {
-    const placements: Array<[number, number, string, number]> = [
-      [56, 750, 'tourist-0', .78],
-      [161, 766, 'tourist-1', .72],
-      [288, 766, 'tourist-2', .74],
-      [407, 749, 'tourist-1', .73]
+    const placements: Array<[number, number, string, string, number]> = [
+      [53, 738, 'woman-idle', 'woman-shout', .76],
+      [160, 755, 'man-idle', 'man-shout', .76],
+      [292, 743, 'elder-idle', 'elder-shout', .79],
+      [404, 759, 'woman-idle', 'woman-attack', .77]
     ];
-    for (const [x, y, texture, size] of placements) {
-      const tourist = this.add.image(x, y, texture)
-        .setOrigin(.5, 1).setScale(size).setDepth(8);
+    for (const [x, y, idle, angry, scale] of placements) {
+      const tourist = this.add.image(x, y, 'npc-' + idle)
+        .setOrigin(.5, 1).setScale(scale).setDepth(8);
+      this.touristReactions.set(tourist, { idle: 'npc-' + idle, angry: 'npc-' + angry });
       this.tourists.push(tourist);
     }
   }

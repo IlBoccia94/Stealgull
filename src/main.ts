@@ -48,6 +48,7 @@ function toast(message: string): void {
 }
 function updateMute(): void {
   muteButton.textContent = muted ? '♪̸' : '♫';
+  muteButton.dataset.muted = String(muted);
   muteButton.setAttribute('aria-label', muted ? 'Attiva audio' : 'Disattiva audio');
 }
 function initAudio(): void {
@@ -89,9 +90,11 @@ const hooks = {
     $('timer').textContent = Math.floor(state.timeLeft / 60) + ':' + String(Math.ceil(state.timeLeft % 60)).padStart(2, '0');
     $('lives').textContent = '♥ '.repeat(Math.max(0, state.lives)).trimEnd();
     $('lives').setAttribute('aria-label', state.lives + ' vite rimaste');
+    document.querySelector<HTMLElement>('.hud-stat.right')?.setAttribute('data-lives', String(state.lives));
     $('chaosFill').style.width = state.chaos + '%';
     $('chaosValue').textContent = Math.round(state.chaos) + '%';
     $('combo').textContent = 'COMBO ×' + state.multiplier;
+    $('combo').dataset.multiplier = String(state.multiplier);
   },
   onEnd: (result: EndResult) => {
     best = Math.max(best, result.score);

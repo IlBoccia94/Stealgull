@@ -8,7 +8,9 @@
     "dev": "vite --host 0.0.0.0",
     "icons": "node scripts/build-icons.mjs",
     "build": "npm run icons && tsc --noEmit && vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "predev": "node scripts/build-art.mjs",
+    "prebuild": "node scripts/build-art.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"
@@ -20,5 +22,7 @@
     "vite": "^6.3.0",
     "vite-plugin-pwa": "^1.0.0"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }
