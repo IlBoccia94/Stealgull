@@ -37,3 +37,5 @@ La nuova direzione artistica usa 13 asset SVG originali in `public/art/`: animaz
 
 ### M4.1 — Sprite illustrati autentici
 Quattro pose originali del gabbiano (volo, battito d'ali, picchiata, danno) sono ritagliate dal concept illustrato e integrate come texture WebP trasparenti in `public/art/gull-*-illustrated.webp`. Rispetto alla v2 il gabbiano è stato ridimensionato da circa 200 px a circa 110 px su canvas 450 px, lasciando invariati i controlli touch e la logica del gioco. Gli SVG precedenti rimangono come sorgenti di fallback estetico ma non sono caricati per il protagonista.
+
+Il mockup artistico originale è visibile come poster illustrato nella schermata iniziale (`public/art/illustrated-splash.webp`); non viene utilizzato direttamente come livello giocabile perché contiene personaggi e HUD già disegnati, che interferirebbero con gli elementi dinamici.
