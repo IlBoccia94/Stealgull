@@ -49,7 +49,7 @@ export class StealgullScene extends Phaser.Scene {
   private shadow!: Phaser.GameObjects.Ellipse;
   private lifeguard!: Phaser.GameObjects.Image;
   private lifeguardWarning!: Phaser.GameObjects.Text;
-  private clouds: Phaser.GameObjects.Ellipse[] = [];
+  private foamLines: Phaser.GameObjects.Rectangle[] = [];
   private tourists: Phaser.GameObjects.Image[] = [];
   private foods: Food[] = [];
   private projectiles: Projectile[] = [];
@@ -77,18 +77,28 @@ export class StealgullScene extends Phaser.Scene {
     this.hooks = hooks;
   }
 
+  preload(): void {
+    const files = [
+      'gull-fly', 'gull-flap', 'gull-dive', 'gull-hit',
+      'tourist-0', 'tourist-1', 'tourist-2', 'lifeguard',
+      'food-fries', 'food-gelato', 'food-focaccia', 'food-pizza', 'bg-beach'
+    ] as const;
+    for (const file of files) {
+      this.load.svg(file, import.meta.env.BASE_URL + 'art/' + file + '.svg');
+    }
+  }
+
   create(): void {
-    this.makeTextures();
     this.makeBeach();
     this.makeTourists();
-    this.shadow = this.add.ellipse(225, 664, 77, 16, 0x24453e, .2).setDepth(4);
-    this.lifeguard = this.add.image(225, 570, 'lifeguard').setScale(.88).setDepth(8).setVisible(false);
+    this.shadow = this.add.ellipse(225, 677, 95, 20, 0x24453e, .2).setDepth(4);
+    this.lifeguard = this.add.image(225, 570, 'lifeguard').setScale(.7).setDepth(8).setVisible(false);
     this.lifeguardWarning = this.add.text(225, 501, '⚠ BAGNINO!', {
       fontFamily: 'system-ui, sans-serif', fontSize: '14px', color: '#ffffff',
       fontStyle: '900', backgroundColor: '#d94b40', padding: { x: 7, y: 5 }
     }).setOrigin(.5).setDepth(10).setVisible(false);
-    this.gull = this.add.image(225, FLIGHT_Y, 'gull-fly').setDepth(15);
-    this.carried = this.add.image(0, 0, 'food-fries').setScale(.48).setDepth(16).setVisible(false);
+    this.gull = this.add.image(225, FLIGHT_Y, 'gull-fly').setScale(.78).setDepth(15);
+    this.carried = this.add.image(0, 0, 'food-fries').setScale(.42).setDepth(16).setVisible(false);
 
     this.input.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
       if (this.state !== 'playing') return;
@@ -141,7 +151,7 @@ export class StealgullScene extends Phaser.Scene {
     this.lifeguard.setVisible(false);
     this.lifeguardWarning.setVisible(false);
     this.gull.setPosition(225, FLIGHT_Y).setTexture('gull-fly').clearTint().setAlpha(1);
-    this.gull.setAngle(0).setScale(1);
+    this.gull.setAngle(0).setScale(.78);
     this.state = 'playing';
     for (let i = 0; i < 4; i += 1) this.spawnFood();
     this.report();
@@ -168,9 +178,9 @@ export class StealgullScene extends Phaser.Scene {
 
   update(_: number, deltaMs: number): void {
     const dt = Math.min(deltaMs / 1000, .04);
-    for (const cloud of this.clouds) {
-      cloud.x += dt * (cloud.scaleX < 1 ? 4 : 7);
-      if (cloud.x > WIDTH + 80) cloud.x = -90;
+    for (let i = 0; i < this.foamLines.length; i += 1) {
+      const line = this.foamLines[i];
+      line.setAlpha(.12 + .05 * Math.sin(this.time.now / 620 + i * 1.9));
     }
     if (this.state === 'home' || this.state === 'over') {
       this.gull.y = FLIGHT_Y + Math.sin(this.time.now / 320) * 5;
@@ -202,9 +212,9 @@ export class StealgullScene extends Phaser.Scene {
       }
     }
     const wingFrame = Math.floor(this.elapsed * 9) % 2 === 0 ? 'gull-fly' : 'gull-flap';
-    this.gull.setTexture(this.hold ? 'gull-dive' : wingFrame);
+    this.gull.setTexture(this.invulnerable > 1.3 ? 'gull-hit' : this.hold ? 'gull-dive' : wingFrame);
     this.gull.setAngle(this.hold ? 14 : (this.gull.y > FLIGHT_Y + 10 ? -11 : -2));
-    this.gull.setScale(this.invulnerable > 0 ? 1.02 : 1);
+    this.gull.setScale(this.invulnerable > 0 ? .76 : .78);
     if (this.invulnerable > 0) {
       this.gull.setAlpha(Math.floor(this.elapsed * 15) % 2 === 0 ? .55 : 1);
     } else {
@@ -378,7 +388,7 @@ export class StealgullScene extends Phaser.Scene {
     const x = slots.length ? slots[between(0, slots.length - 1)] : between(45, 405);
     const choice = FOODS[between(0, FOODS.length - 1)];
     const homeY = between(609, 647);
-    const sprite = this.add.image(x, homeY, 'food-' + choice.kind).setDepth(7).setScale(.94);
+    const sprite = this.add.image(x, homeY, 'food-' + choice.kind).setDepth(7).setScale(.58);
     this.foods.push({ sprite, kind: choice.kind, score: choice.points, seed: Math.random() * 10, homeY });
     const halo = this.add.circle(x, homeY + 5, 21, 0xffffff, .1).setDepth(5);
     this.tweens.add({
@@ -424,187 +434,26 @@ export class StealgullScene extends Phaser.Scene {
   }
 
   private makeBeach(): void {
-    const g = this.add.graphics().setDepth(0);
-    // Warm Mediterranean sky
-    g.fillStyle(0x7dd8e3).fillRect(0, 0, WIDTH, 360);
-    g.fillStyle(0x9fe3e7).fillRect(0, 250, WIDTH, 92);
-    g.fillStyle(0xffd778).fillCircle(364, 123, 54);
-    g.fillStyle(0xffebad, .35).fillCircle(364, 123, 76);
-    // Distant cove and pale cliffs
-    g.fillStyle(0x4b97a3).fillPoints([
-      new Phaser.Geom.Point(0, 332), new Phaser.Geom.Point(0, 286),
-      new Phaser.Geom.Point(40, 303), new Phaser.Geom.Point(85, 288),
-      new Phaser.Geom.Point(144, 334), new Phaser.Geom.Point(225, 329),
-      new Phaser.Geom.Point(286, 300), new Phaser.Geom.Point(367, 330),
-      new Phaser.Geom.Point(450, 295), new Phaser.Geom.Point(450, 350)
-    ], true);
-    g.fillStyle(0x267f90).fillRect(0, 337, WIDTH, 238);
-    g.fillStyle(0x34a9b7).fillRect(0, 365, WIDTH, 188);
-    g.fillStyle(0x4abdc4).fillRect(0, 437, WIDTH, 117);
-    g.fillStyle(0x6cd5d0).fillRect(0, 527, WIDTH, 37);
-    // Sea foam and rhythmic waves
-    for (let row = 0; row < 9; row += 1) {
-      g.lineStyle(row > 5 ? 3 : 2, row % 2 ? 0xb5f8e7 : 0xffffff, row > 5 ? .5 : .21);
-      for (let i = 0; i < 6; i += 1) {
-        const wx = (i * 93 + row * 31) % 485 - 26;
-        const wy = 350 + row * 24;
-        g.lineBetween(wx, wy, wx + 34 + row * 2, wy);
-      }
+    this.add.image(WIDTH / 2, HEIGHT / 2, 'bg-beach').setDisplaySize(WIDTH, HEIGHT).setDepth(0);
+    // Subtle breathing sea foam complements the static hand-drawn scenery.
+    for (let i = 0; i < 5; i += 1) {
+      this.foamLines.push(
+        this.add.rectangle(WIDTH / 2, 343 + i * 28, WIDTH - 28, 2, 0xffffff, .13).setDepth(1)
+      );
     }
-    // Shoreline and sand
-    g.fillStyle(0xf6d584).fillRect(0, 574, WIDTH, 226);
-    g.fillStyle(0xffe9ab).fillRect(0, 574, WIDTH, 8);
-    g.fillStyle(0xefd07e).fillRect(0, 700, WIDTH, 100);
-    g.lineStyle(4, 0xfff5ca, .9);
-    for (let x = 0; x < WIDTH; x += 24) {
-      g.lineBetween(x, 582 + (x % 40) / 8, x + 16, 584 + (x % 40) / 8);
-    }
-    // A few shells and sand flecks
-    for (let i = 0; i < 43; i += 1) {
-      const x = (i * 73 + 28) % WIDTH;
-      const y = 666 + ((i * 47) % 134);
-      g.fillStyle(i % 3 === 0 ? 0xffefbf : 0xdcb769, .7);
-      g.fillEllipse(x, y, i % 3 + 2, 2);
-    }
-    // Small fishing boat
-    g.fillStyle(0xffffff).fillTriangle(74, 361, 89, 313, 89, 361);
-    g.fillStyle(0x153f60).fillTriangle(72, 363, 112, 363, 92, 374);
-    g.lineStyle(2, 0xffffff).lineBetween(89, 314, 89, 366);
-    // Parasols and towels in the back of the beach
-    this.parasol(93, 740, 0xed665b, 0xffcb71);
-    this.parasol(360, 750, 0x20a8a8, 0xfff0af);
-    g.fillStyle(0xffffff, .6).fillRoundedRect(159, 754, 72, 16, 5);
-    g.fillStyle(0x69c8bd, .5).fillRoundedRect(163, 757, 63, 8, 3);
-    // Clouds sit in front of sky, behind gameplay
-    this.addCloud(77, 136, 1);
-    this.addCloud(217, 68, .76);
-    this.addCloud(455, 203, 1.1);
-  }
-
-  private parasol(x: number, y: number, primary: number, secondary: number): void {
-    const g = this.add.graphics().setDepth(1);
-    g.lineStyle(4, 0x7b7960, .9).lineBetween(x, y - 72, x, y + 35);
-    g.fillStyle(0x456b67, .2).fillEllipse(x, y + 36, 120, 23);
-    g.fillStyle(primary);
-    g.beginPath(); g.arc(x, y - 70, 69, Math.PI, Math.PI * 2, false); g.closePath(); g.fillPath();
-    g.fillStyle(secondary);
-    g.beginPath(); g.arc(x, y - 70, 31, Math.PI, Math.PI * 2, false); g.closePath(); g.fillPath();
-    g.lineStyle(3, 0x2b6471, .5).lineBetween(x - 65, y - 70, x + 65, y - 70);
-  }
-
-  private addCloud(x: number, y: number, size: number): void {
-    const cloud = this.add.ellipse(x, y, 102, 26, 0xffffff, .62).setDepth(1).setScale(size);
-    this.clouds.push(cloud);
-    this.add.ellipse(x - 23, y - 8, 47, 29, 0xffffff, .22).setDepth(1).setScale(size);
   }
 
   private makeTourists(): void {
-    const xs = [56, 161, 288, 407];
-    for (let i = 0; i < xs.length; i += 1) {
-      const tourist = this.add.image(xs[i], 725 + (i % 2) * 21, 'tourist-' + (i % 3))
-        .setDepth(8).setScale(i % 2 === 0 ? .92 : .82);
+    const placements: Array<[number, number, string, number]> = [
+      [56, 750, 'tourist-0', .78],
+      [161, 766, 'tourist-1', .72],
+      [288, 766, 'tourist-2', .74],
+      [407, 749, 'tourist-1', .73]
+    ];
+    for (const [x, y, texture, size] of placements) {
+      const tourist = this.add.image(x, y, texture)
+        .setOrigin(.5, 1).setScale(size).setDepth(8);
       this.tourists.push(tourist);
     }
-  }
-
-  private makeTextures(): void {
-    const g = this.add.graphics();
-    const outline = 0x203e4b;
-    for (const pose of ['fly', 'flap', 'dive'] as const) {
-      g.clear();
-      g.lineStyle(5, outline, 1);
-      g.fillStyle(0xdbe9e7);
-      g.fillTriangle(31, 57, 6, 37, 17, 76);
-      g.fillStyle(0xf9fcf5);
-      // Wings first: flapping silhouettes change every other frame.
-      if (pose === 'dive') {
-        g.fillEllipse(40, 61, 45, 26);
-        g.fillTriangle(48, 58, 22, 93, 65, 82);
-      } else if (pose === 'flap') {
-        g.fillTriangle(41, 51, 25, 89, 73, 63);
-        g.fillTriangle(66, 48, 73, 95, 100, 59);
-      } else {
-        g.fillTriangle(42, 52, 11, 28, 72, 67);
-        g.fillTriangle(68, 54, 90, 13, 101, 68);
-      }
-      g.fillStyle(0xfafff9).fillEllipse(66, 57, 75, 51);
-      g.lineStyle(5, outline, .9).strokeEllipse(66, 57, 75, 51);
-      g.fillStyle(0xffffff).fillCircle(87, 42, 24);
-      g.lineStyle(4, outline).strokeCircle(87, 42, 24);
-      g.fillStyle(0x263b4b).fillEllipse(94, 39, 8, 14);
-      g.fillStyle(0xffffff).fillCircle(96, 34, 2.8);
-      // A thick suspicious eyebrow
-      g.lineStyle(5, outline).lineBetween(83, 28, 101, 30);
-      // Orange-yellow criminal beak
-      g.fillStyle(0xffc75b).fillTriangle(103, 49, 127, 55, 104, 65);
-      g.lineStyle(3, outline).lineBetween(106, 63, 120, 58);
-      g.lineStyle(3, 0xe08c47).lineBetween(57, 76, 53, 93).lineBetween(80, 76, 84, 93);
-      g.lineStyle(3, 0xe08c47).lineBetween(49, 93, 62, 93).lineBetween(81, 93, 94, 93);
-      g.generateTexture('gull-' + pose, 132, 108);
-    }
-    // Human characters with separate t-shirt colors
-    for (let i = 0; i < 3; i += 1) {
-      g.clear();
-      const shirt = [0xe86f60, 0x75b9c0, 0xf4ad58][i];
-      g.fillStyle(0x7d5b4d).fillRect(24, 69, 11, 29).fillRect(44, 69, 11, 29);
-      g.fillStyle(0x263b4b).fillEllipse(28, 98, 22, 9).fillEllipse(51, 98, 22, 9);
-      g.fillStyle(0xffc293).fillRoundedRect(15, 43, 13, 36, 6)
-        .fillRoundedRect(52, 43, 13, 36, 6);
-      g.fillStyle(shirt).fillRoundedRect(20, 42, 40, 41, 9);
-      g.fillStyle(0xfdd4a4).fillCircle(40, 27, 23);
-      g.fillStyle(0x4d3e37).fillEllipse(39, 11, 41, 13);
-      g.fillStyle(0x214155).fillRoundedRect(22, 24, 37, 10, 4);
-      g.fillStyle(0xffffff).fillRect(23, 27, 6, 2).fillRect(45, 27, 6, 2);
-      g.lineStyle(2, 0x874b45).lineBetween(36, 39, 45, 39);
-      g.generateTexture('tourist-' + i, 80, 112);
-    }
-    g.clear();
-    // Lifeguard: red uniform, peaked cap and whistle
-    g.fillStyle(0xefae7f).fillRoundedRect(15, 46, 13, 34, 6).fillRoundedRect(54, 46, 13, 34, 6);
-    g.fillStyle(0x24465c).fillRect(28, 75, 12, 27).fillRect(44, 75, 12, 27);
-    g.fillStyle(0x264b5c).fillEllipse(30, 104, 24, 8).fillEllipse(52, 104, 24, 8);
-    g.fillStyle(0xf15a56).fillRoundedRect(21, 43, 42, 40, 9);
-    g.fillStyle(0xffffff).fillCircle(43, 62, 9);
-    g.fillStyle(0xf1b88b).fillCircle(42, 30, 23);
-    g.fillStyle(0xe64f51).fillEllipse(40, 14, 47, 17).fillRoundedRect(22, 15, 48, 7, 3);
-    g.fillStyle(0x193d50).fillRoundedRect(23, 28, 38, 10, 4);
-    g.fillStyle(0xffe9d4).fillRect(29, 30, 6, 2).fillRect(48, 30, 6, 2);
-    g.generateTexture('lifeguard', 84, 116);
-    // Four recognizable snack icons, individually illustrated
-    g.clear();
-    g.lineStyle(3, outline);
-    for (const [x, h] of [[21, 25], [29, 31], [37, 27], [45, 33]]) {
-      g.fillStyle(0xffdf69).fillRoundedRect(x, 5 + (33 - h), 7, h, 2);
-    }
-    g.fillStyle(0xe94d4e).fillPoints([
-      new Phaser.Geom.Point(14, 27), new Phaser.Geom.Point(52, 27),
-      new Phaser.Geom.Point(47, 57), new Phaser.Geom.Point(20, 57)
-    ], true);
-    g.fillStyle(0xffe7a0).fillCircle(33, 41, 8);
-    g.generateTexture('food-fries', 66, 62);
-    g.clear();
-    g.fillStyle(0xd89752).fillTriangle(22, 29, 47, 29, 34, 60);
-    g.lineStyle(2, 0xac7148).lineBetween(28, 38, 41, 38).lineBetween(29, 47, 38, 47);
-    g.fillStyle(0xf2a8ba).fillCircle(34, 24, 16);
-    g.fillStyle(0xffe7db).fillCircle(34, 12, 12);
-    g.fillStyle(0xd63c60).fillCircle(36, 4, 4);
-    g.generateTexture('food-gelato', 66, 64);
-    g.clear();
-    g.fillStyle(0xb78549).fillRoundedRect(9, 18, 50, 31, 5);
-    g.fillStyle(0xf4cc82).fillRoundedRect(7, 12, 50, 32, 6);
-    g.lineStyle(3, 0xe6a35b).strokeRoundedRect(7, 12, 50, 32, 6);
-    for (const [x, y] of [[19, 24], [33, 18], [44, 29], [29, 36]]) {
-      g.fillStyle(0x5c8851).fillEllipse(x, y, 6, 4);
-    }
-    g.generateTexture('food-focaccia', 66, 59);
-    g.clear();
-    g.fillStyle(0xf0bd76).fillTriangle(8, 12, 56, 12, 32, 57);
-    g.fillStyle(0xffdf6b).fillTriangle(12, 14, 52, 14, 32, 51);
-    g.lineStyle(5, 0xa97940).lineBetween(9, 13, 55, 13);
-    for (const [x, y] of [[24, 26], [38, 27], [33, 39]]) {
-      g.fillStyle(0xdb5753).fillCircle(x, y, 5);
-    }
-    g.generateTexture('food-pizza', 66, 65);
-    g.destroy();
   }
 }

@@ -30,4 +30,7 @@ Build: `npm run build`; anteprima: `npm run preview`. Requisito Node.js 20+.
 ## Note tecniche
 Il path base Vite è `/Stealgull/` e corrisponde al nome esatto del repository. Record e mute sono salvati in `localStorage`; le partite non vengono tracciate né inviate a server. Le grafiche sono vettoriali originali/procedurali, create appositamente per Stealgull.
 
+## M4 Art Pass v2
+La nuova direzione artistica usa 13 asset SVG originali in `public/art/`: animazioni del gabbiano (volo, battito, picchiata, stordimento), alimenti, turisti, bagnino e fondale mediterraneo. Tutti vengono caricati dal motore Phaser e precacheati dalla PWA. L'HUD è stato rifinito in stile arcade/cartoon. Il gameplay e i salvataggi rimangono compatibili con la v1.
+
 **MVP / primo playtest**. Bilanciamento e grafica saranno rifiniti dopo i test su dispositivo reale.

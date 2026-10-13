@@ -49,3 +49,28 @@ h1 span{color:#ffce69}h2{color:#ffe097}
 .desktop-note{display:none}
 @media(min-width:700px){.stage{border-radius:20px;border:5px solid #124758}.desktop-note{display:block;position:absolute;bottom:7px;font-size:10px;font-weight:800;letter-spacing:4px;color:#bfe4e0;opacity:.7}}
 @media(max-height:690px){.brand-art{width:90px}.howto{margin-bottom:13px}.subtitle{margin:8px 0 12px}.howto>div{min-height:78px}.overlay{padding:10px 24px}.highscore{margin-top:15px}h1,h2{font-size:45px}}
+
+
+/* Art Pass v2: playful carved-wood HUD, stronger beach contrast */
+.hud{left:10px;right:98px;top:max(9px,env(safe-area-inset-top))}
+.hud-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.hud-stat{align-items:center;min-width:0;padding:6px 5px 7px;
+  background:linear-gradient(180deg,#f9e0a6,#e2bd76);
+  color:#442a1b;border:2px solid #785030;border-radius:11px;
+  text-shadow:none;box-shadow:0 3px 0 #97683e,0 5px 12px #2c261b33}
+.hud-stat.mid,.hud-stat.right{align-items:center}
+.mini-label{color:#734421;font-size:9px;letter-spacing:1.2px}
+.hud-stat b{font-size:clamp(16px,4.4vw,24px);text-shadow:0 1px 0 #fff8da66}
+#lives{color:#d94c4c;font-size:clamp(12px,3.3vw,18px);line-height:1.45}
+.hud-lower{margin-top:12px;align-items:center}
+.chaos-group{padding:6px 9px;background:#17333ecf;border:2px solid #efc879;border-radius:12px;box-shadow:0 3px 0 #98643d}
+.chaos-caption{color:#ffdd9d;font-size:10px}
+.chaos-track{height:11px;border:2px solid #ffc87799}
+#chaosFill{background:linear-gradient(90deg,#ffe268,#ffad4d,#e84656)}
+.combo{padding:8px 7px;font-size:clamp(10px,2.5vw,12px);color:#422415;
+  background:linear-gradient(180deg,#ffe98b,#f3bb51);border:2px solid #956534;
+  border-radius:12px;text-shadow:none;box-shadow:0 3px 0 #a66e34}
+.round-btn{background:linear-gradient(180deg,#ffe9ac,#e8bb68);color:#553721;
+  border:2px solid #956534;box-shadow:0 3px 0 #98663d}
+.vignette{background:linear-gradient(180deg,#18353a72 0,transparent 23%,transparent 70%,#5c432d60 100%)}
+.cta{background:linear-gradient(180deg,#ffe38f,#ffbf56)}
