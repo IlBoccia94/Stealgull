@@ -49,7 +49,6 @@ export class StealgullScene extends Phaser.Scene {
   private shadow!: Phaser.GameObjects.Ellipse;
   private lifeguard!: Phaser.GameObjects.Image;
   private lifeguardWarning!: Phaser.GameObjects.Text;
-  private foamLines: Phaser.GameObjects.Rectangle[] = [];
   private tourists: Phaser.GameObjects.Image[] = [];
   private touristReactions = new Map<Phaser.GameObjects.Image, { idle: string; angry: string }>();
   private foods: Food[] = [];
@@ -85,7 +84,7 @@ export class StealgullScene extends Phaser.Scene {
     for (const file of files) {
       this.load.svg(file, import.meta.env.BASE_URL + 'art/' + file + '.svg');
     }
-    this.load.image('bg-beach-v4', import.meta.env.BASE_URL + 'art/beach-illustrated.webp');
+    this.load.image('bg-beach-v5', import.meta.env.BASE_URL + 'art/beach-clean-v5.webp');
     for (const name of [
       'guard-idle', 'guard-whistle', 'guard-run-right', 'guard-run-left',
       'guard-point', 'guard-grab',
@@ -192,10 +191,6 @@ export class StealgullScene extends Phaser.Scene {
 
   update(_: number, deltaMs: number): void {
     const dt = Math.min(deltaMs / 1000, .04);
-    for (let i = 0; i < this.foamLines.length; i += 1) {
-      const line = this.foamLines[i];
-      line.setAlpha(.12 + .05 * Math.sin(this.time.now / 620 + i * 1.9));
-    }
     if (this.state === 'home' || this.state === 'over') {
       this.gull.y = FLIGHT_Y + Math.sin(this.time.now / 320) * 5;
       this.gull.setTexture('gull-fly');
@@ -458,13 +453,7 @@ export class StealgullScene extends Phaser.Scene {
 
 
   private makeBeach(): void {
-    this.add.image(WIDTH / 2, HEIGHT / 2, 'bg-beach-v4').setDisplaySize(WIDTH, HEIGHT).setDepth(0);
-    // A subtle animated foam shimmer stays behind all interactive sprites.
-    for (let i = 0; i < 5; i += 1) {
-      this.foamLines.push(
-        this.add.rectangle(WIDTH / 2, 342 + i * 28, WIDTH - 32, 2, 0xffffff, .11).setDepth(1)
-      );
-    }
+    this.add.image(WIDTH / 2, HEIGHT / 2, 'bg-beach-v5').setDisplaySize(WIDTH, HEIGHT).setDepth(0);
   }
 
   private makeTourists(): void {

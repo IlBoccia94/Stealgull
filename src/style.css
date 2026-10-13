@@ -51,64 +51,152 @@ h1 span{color:#ffce69}h2{color:#ffe097}
 @media(max-height:690px){.brand-art{width:90px}.howto{margin-bottom:13px}.subtitle{margin:8px 0 12px}.howto>div{min-height:78px}.overlay{padding:10px 24px}.highscore{margin-top:15px}h1,h2{font-size:45px}}
 
 
-/* Art Pass v2: playful carved-wood HUD, stronger beach contrast */
-.hud{left:10px;right:98px;top:max(9px,env(safe-area-inset-top))}
-.hud-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
-.hud-stat{align-items:center;min-width:0;padding:6px 5px 7px;
-  background:linear-gradient(180deg,#f9e0a6,#e2bd76);
-  color:#442a1b;border:2px solid #785030;border-radius:11px;
-  text-shadow:none;box-shadow:0 3px 0 #97683e,0 5px 12px #2c261b33}
-.hud-stat.mid,.hud-stat.right{align-items:center}
-.mini-label{color:#734421;font-size:9px;letter-spacing:1.2px}
-.hud-stat b{font-size:clamp(16px,4.4vw,24px);text-shadow:0 1px 0 #fff8da66}
-#lives{color:#d94c4c;font-size:clamp(12px,3.3vw,18px);line-height:1.45}
-.hud-lower{margin-top:12px;align-items:center}
-.chaos-group{padding:6px 9px;background:#17333ecf;border:2px solid #efc879;border-radius:12px;box-shadow:0 3px 0 #98643d}
-.chaos-caption{color:#ffdd9d;font-size:10px}
-.chaos-track{height:11px;border:2px solid #ffc87799}
-#chaosFill{background:linear-gradient(90deg,#ffe268,#ffad4d,#e84656)}
-.combo{padding:8px 7px;font-size:clamp(10px,2.5vw,12px);color:#422415;
-  background:linear-gradient(180deg,#ffe98b,#f3bb51);border:2px solid #956534;
-  border-radius:12px;text-shadow:none;box-shadow:0 3px 0 #a66e34}
-.round-btn{background:linear-gradient(180deg,#ffe9ac,#e8bb68);color:#553721;
-  border:2px solid #956534;box-shadow:0 3px 0 #98663d}
-.vignette{background:linear-gradient(180deg,#18353a72 0,transparent 23%,transparent 70%,#5c432d60 100%)}
-.cta{background:linear-gradient(180deg,#ffe38f,#ffbf56)}
 
-/* Illustrated poster is intentionally menu-only: gameplay remains clutter-free. */
-.intro-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.53;filter:brightness(.52) saturate(1.25) blur(.5px);pointer-events:none}
-#startOverlay > :not(.intro-poster){position:relative;z-index:1}
-#startOverlay::before{z-index:2}
-
-/* M4 v4 illustrated HUD — exported from the approved concept sheets. */
-.hud{left:9px;right:96px;top:max(9px,env(safe-area-inset-top))}
-.hud-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
-.hud-stat{position:relative;height:56px;padding:0;background:transparent center/100% 100% no-repeat!important;border:0;border-radius:0;box-shadow:none;text-shadow:0 1px 3px #160b08c0;align-items:stretch!important}
-.hud-stat:first-child{background-image:url('/Stealgull/art/v4/hud-score.webp')!important}
-.hud-stat.mid{background-image:url('/Stealgull/art/v4/hud-timer.webp')!important}
-.hud-stat.right{background-image:url('/Stealgull/art/v4/hud-lives.webp')!important}
-.hud-stat .mini-label{position:absolute;top:10px;left:38%;width:55%;text-align:center;color:#ffdf96;font-size:8px;letter-spacing:.5px;line-height:1}
-.hud-stat b{position:absolute;left:36%;top:26px;width:60%;font-size:clamp(14px,4.4vw,21px);line-height:1;color:#fff6e0;text-align:center;letter-spacing:-.6px;text-shadow:0 2px 1px #160b08}
-.hud-stat.right .mini-label{display:none}
-#lives{position:absolute;opacity:0;pointer-events:none}
-.hud-stat.right::after{content:"";position:absolute;left:22%;top:28%;width:71%;height:52%;pointer-events:none;
- background:linear-gradient(to left,rgba(22,20,23,.77) 0%,rgba(22,20,23,.77) var(--lost,0%),transparent var(--lost,0%));
- border-radius:14px;mix-blend-mode:multiply}
-.hud-stat.right[data-lives="3"]{--lost:0%}
-.hud-stat.right[data-lives="2"]{--lost:33.4%}
-.hud-stat.right[data-lives="1"]{--lost:66.7%}
-.hud-stat.right[data-lives="0"]{--lost:100%}
-.hud-lower{margin-top:6px;gap:7px}
-.chaos-group{position:relative;background:url('/Stealgull/art/v4/hud-chaos.webp') center/100% 100% no-repeat;
- height:47px;border:0;padding:9px 12px 6px 26%;border-radius:0;box-shadow:none}
-.chaos-caption{margin:0 0 4px;font-size:8px;line-height:1;color:#fff0b3;text-shadow:0 2px 2px #191311}
-.chaos-track{height:10px;border:1px solid #ffd581;border-radius:7px;background:#1b1926;overflow:hidden}
-#chaosFill{background:linear-gradient(90deg,#ffd85d,#ff9d38,#e84440)}
-.combo[data-multiplier="3"]{background:url('/Stealgull/art/v4/hud-combo.webp') center/contain no-repeat;color:transparent;
- font-size:0;border:0;box-shadow:none;min-width:74px;height:58px;padding:0}
-.round-btn#pauseBtn{background:url('/Stealgull/art/v4/hud-pause.webp') center/cover no-repeat!important;
- border:0!important;box-shadow:none!important;font-size:0}
-.round-btn#muteBtn[data-muted="true"]{background:url('/Stealgull/art/v4/hud-mute.webp') center/cover no-repeat!important;
- border:0!important;box-shadow:none!important;font-size:0}
-.highscore{background:url('/Stealgull/art/v4/hud-trophy.webp') center/100% 100% no-repeat;min-width:195px;
- min-height:90px;padding:42px 17px 12px;color:#fff6db;text-shadow:0 1px 2px #30241a}
+/* M4 v5: all HUD components are dynamic HTML/CSS, never baked into images. */
+:root {
+  --hud-ink: #f9feff;
+  --hud-edge: rgba(224, 249, 255, 0.72);
+  --hud-glass: rgba(5, 42, 66, .88);
+  --hud-blue: #063e61;
+  --hud-highlight: #ffe08c;
+}
+.vignette { background:linear-gradient(180deg,rgba(7,35,66,.23),transparent 26%,transparent 68%,rgba(35,38,36,.10)); }
+.hud {
+  top:max(12px, env(safe-area-inset-top));
+  left:12px;
+  right:107px;
+  z-index:4;
+  pointer-events:none;
+}
+.hud-row {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px;
+}
+.hud-stat,
+.hud-stat.mid,
+.hud-stat.right {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-width:0;
+  min-height:59px;
+  padding:8px 5px 7px;
+  gap:3px;
+  border:1.5px solid var(--hud-edge);
+  border-bottom:3px solid rgba(131,219,240,.85);
+  border-radius:13px;
+  background:linear-gradient(150deg,rgba(7,70,109,.95),var(--hud-glass));
+  color:var(--hud-ink);
+  box-shadow:0 4px 10px rgba(1,31,46,.28),inset 0 1px rgba(255,255,255,.16);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  text-shadow:0 1px 2px rgba(0,0,0,.35);
+}
+.mini-label {
+  font-size:9px;
+  line-height:1.1;
+  letter-spacing:1.25px;
+  font-weight:900;
+  color:#a9eeff;
+}
+.hud-stat b {
+  position:static;
+  display:block;
+  font-variant-numeric:tabular-nums;
+  font-size:clamp(16px,4.7vw,24px);
+  line-height:1.15;
+  letter-spacing:-.5px;
+  color:#fffaf1;
+  font-weight:1000;
+  white-space:nowrap;
+}
+#lives {
+  display:block;
+  opacity:1;
+  position:static;
+  color:#ff7d89;
+  font-size:clamp(14px,3.5vw,19px);
+  line-height:1.25;
+  letter-spacing:-1px;
+  text-shadow:0 1px #5c1d32;
+}
+.hud-lower { margin-top:8px; display:flex;align-items:center;gap:7px; }
+.chaos-group {
+  flex:1;
+  min-width:0;
+  padding:9px 12px 10px;
+  border:1.5px solid var(--hud-edge);
+  border-radius:13px;
+  background:linear-gradient(160deg,rgba(4,63,91,.95),rgba(5,37,60,.90));
+  box-shadow:0 4px 10px rgba(1,31,46,.28),inset 0 1px rgba(255,255,255,.15);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+}
+.chaos-caption {
+  color:#effbff;
+  text-shadow:0 1px 3px rgba(0,0,0,.4);
+  font-size:10px;
+  letter-spacing:1.2px;
+  font-weight:950;
+  margin-bottom:6px;
+}
+#chaosValue { font-variant-numeric:tabular-nums;color:#ffe9ac; }
+.chaos-track { height:11px; border:1px solid rgba(236,249,255,.78); background:#0b2438; border-radius:20px; overflow:hidden; }
+#chaosFill { width:0%;height:100%;background:linear-gradient(90deg,#60db9c,#ffd666 58%,#ed555e);transition:width .12s linear;border-radius:inherit; }
+.combo {
+  display:flex;align-items:center;justify-content:center;
+  min-width:83px;
+  min-height:51px;
+  padding:8px 9px;
+  font-size:11px;
+  letter-spacing:-.1px;
+  font-weight:950;
+  color:#583812;
+  white-space:nowrap;
+  background:linear-gradient(160deg,#ffe8a4,#ffc35f);
+  border:1.5px solid #fff4d7;
+  border-bottom:3px solid #a46936;
+  border-radius:13px;
+  box-shadow:0 4px 10px rgba(1,31,46,.26);
+  text-shadow:0 1px rgba(255,255,255,.45);
+}
+.combo.combo-active { background:linear-gradient(155deg,#fff0a6,#ffbb35);animation:combo-pop .4s ease-out; }
+@keyframes combo-pop { 0%{transform:scale(1.04)} 55%{transform:scale(1)} 100%{transform:scale(1)} }
+.top-controls { top:max(12px,env(safe-area-inset-top));right:12px;gap:7px; }
+.round-btn {
+  width:39px;height:42px;
+  color:white;
+  background:linear-gradient(150deg,#0b6d9c,#063750);
+  border:1.5px solid #d6f5fc;
+  border-bottom:3px solid #54b7d0;
+  border-radius:13px;
+  box-shadow:0 4px 9px rgba(1,31,46,.28);
+  font-size:22px;
+  font-weight:800;
+}
+.round-btn:active { transform:translateY(2px);box-shadow:0 1px 5px rgba(1,31,46,.2); }
+.hud.time-critical .hud-stat.mid {
+  border-color:#ffd2ad; background:linear-gradient(150deg,rgba(158,56,49,.95),rgba(105,31,50,.95));
+}
+.hud.time-critical #timer { color:#ffe2a6; }
+.hud.chaos-critical .chaos-group { border-color:#ffd06b; }
+.hud.chaos-critical #chaosValue { color:#ff9f8e; }
+.highscore { background:transparent;min-width:0;min-height:0;padding:0;color:#dbf8ed;text-shadow:0 2px 5px #062733; }
+.intro-poster { position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.42;filter:brightness(.42) saturate(1.06);pointer-events:none; }
+#startOverlay > :not(.intro-poster) { position:relative;z-index:1; }
+#startOverlay::before { z-index:2; }
+@media(max-width:360px) {
+ .hud{left:8px;right:103px;top:max(8px,env(safe-area-inset-top))}
+ .hud-row{gap:4px}
+ .hud-stat,.hud-stat.mid,.hud-stat.right{min-height:56px;border-radius:10px;padding:6px 3px}
+ .hud-stat b{font-size:16px}
+ .mini-label{font-size:8px}
+ #lives{font-size:15px}
+ .hud-lower{gap:5px}
+ .chaos-group{padding:7px 9px}
+ .combo{min-width:75px;font-size:10px;padding:6px}
+ .round-btn{width:37px;height:39px;font-size:19px}
+ .top-controls{right:9px;gap:5px;top:max(8px,env(safe-area-inset-top))}
+}

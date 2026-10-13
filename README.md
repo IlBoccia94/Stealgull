@@ -48,3 +48,7 @@ Il HUD carica pannelli illustrati per punti, tempo, vite, barra caos e bottoni.
 Gli atlanti sono sorgenti compatti: `scripts/build-art.mjs` genera automaticamente i singoli WebP
 in `public/art/v4/` durante `npm run dev` e `npm run build`.
 Tutti gli elementi rimangono ospitati localmente dal sito, senza dipendenze runtime esterne.
+
+
+## M4 v5 — Sfondo pulito e HUD completamente dinamico
+La scena usa `public/art/beach-clean-v5.webp`, il fondale mediterraneo pulito scelto nel playtest, senza HUD, persone o gabbiani pre-renderizzati. Gli elementi dinamici dell'interfaccia (punteggio, timer, vite, caos, combo, pausa e volume) sono costruiti interamente con HTML/CSS e aggiornati dallo stato del gioco in `src/main.ts`: **non usano immagini**. Il contatore secondi è corretto sul confine dei minuti, le vite rimaste vengono rappresentate con cuori pieni/vuoti, il livello di caos e il moltiplicatore cambiano in tempo reale. La generazione durante la build esporta solo gli sprite dei PNG dei personaggi; il vecchio atlante HUD non è più necessario.

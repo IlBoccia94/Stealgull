@@ -87,14 +87,19 @@ function vibrate(ms: number): void {
 const hooks = {
   onUpdate: (state: GameSnapshot) => {
     $('score').textContent = state.score.toLocaleString('it-IT');
-    $('timer').textContent = Math.floor(state.timeLeft / 60) + ':' + String(Math.ceil(state.timeLeft % 60)).padStart(2, '0');
-    $('lives').textContent = '♥ '.repeat(Math.max(0, state.lives)).trimEnd();
+    const seconds = Math.max(0, Math.ceil(state.timeLeft));
+    $('timer').textContent = Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
+    hud.classList.toggle('time-critical', seconds <= 10);
+    hud.classList.toggle('chaos-critical', state.chaos >= 70);
+    $('lives').textContent = '♥'.repeat(Math.max(0, state.lives)) + '♡'.repeat(Math.max(0, 3 - state.lives));
     $('lives').setAttribute('aria-label', state.lives + ' vite rimaste');
     document.querySelector<HTMLElement>('.hud-stat.right')?.setAttribute('data-lives', String(state.lives));
-    $('chaosFill').style.width = state.chaos + '%';
+    $('chaosFill').style.width = Math.max(0, Math.min(100, state.chaos)) + '%';
+    $('chaosTrack').setAttribute('aria-valuenow', String(Math.round(state.chaos)));
     $('chaosValue').textContent = Math.round(state.chaos) + '%';
     $('combo').textContent = 'COMBO ×' + state.multiplier;
     $('combo').dataset.multiplier = String(state.multiplier);
+    $('combo').classList.toggle('combo-active', state.multiplier > 1);
   },
   onEnd: (result: EndResult) => {
     best = Math.max(best, result.score);
