@@ -299,6 +299,9 @@ export class StealgullScene extends Phaser.Scene {
   }
 
   private steal(food: Food): void {
+    // The collector already routes power-ups elsewhere. This narrowing keeps
+    // the inventory strictly limited to edible items.
+    if (food.kind === 'life' || food.kind === 'shield') return;
     this.didGrab = true;
     this.chain = this.comboWindow > 0 ? this.chain + 1 : 1;
     this.comboWindow = 6;
